@@ -1,0 +1,122 @@
+from ast import main
+import code
+from email.mime import audio
+from logging import exception  
+import pyttsx3
+import datetime
+import speech_recognition as sr
+import wikipedia
+import webbrowser
+import os
+import smtplib
+
+
+engine = pyttsx3.init('sapi5')                      #To take voice input (inbuilt voice in microsoft)
+voices = engine.getProperty('voices')
+
+engine.setProperty('voices',voices[1].id)           #To set the voice of man, here we are using voice[0].id ---> which is David by default
+
+
+def speak(audio):
+    engine.say(audio)
+    engine.runAndWait()
+
+def wishMe():
+    hour = int(datetime.datetime.now().hour)        #It will give us the current hour
+    if(hour>=0 and hour<12):
+        speak("Good Morning!")
+    elif(hour>=12 and hour<18):
+        speak("Good AfterNoon!")
+    else:
+        speak("Good Evening!")
+
+    speak("I am Jarvis Sir, Please tell me How may I help you?")
+
+def takeCommand():
+    # It will take microphone input from the user and returns string output
+    r = sr.Recognizer()
+    
+    with sr.Microphone() as source:
+        print("Listening...")
+        r.pause_threshold = 1
+        r.energy_threshold = 1000
+        audio = r.listen(source)
+
+    try:
+        print("Recognizing...")
+        query  = r.recognize_google(audio, language="en-US")
+        print(f"User said: {query}")
+
+    except exception as e:
+        print("Say that again please...")
+        return "None"
+
+    return query
+
+def sendEmail(to, content):
+    server = smtplib.SMTP('smtp.gmail.com',587)
+    server.ehlo()
+    server.starttls()
+    server.login('Youremail@gmail.com','Yourpassword@2001')
+    server.sendmail('Youremail@gmail.com',to,content)
+    server.closed()
+
+
+
+if __name__ == "__main__":
+    wishMe()
+    while True:
+        query = takeCommand().lower()
+
+        # Logics for executing task based on query
+        if 'wikipedia' in query:
+            speak("Searching Wikipedia...")
+            query = query.replace("wikipedia","")
+            results = wikipedia.summary(query, sentences=2)
+            speak("According to Wikipedia")
+            print(results)
+            speak(results)
+
+        elif 'open youtube' in query:
+            webbrowser.open("youtube.com")
+
+        elif 'open google' in query:
+            webbrowser.open("google.com")
+
+        elif 'open fb' in query:
+            webbrowser.open("facebook.com")
+
+        elif 'play music' in query:
+            music_dir = "D:\\Music"
+            songs = os.listdir(music_dir)
+            print(songs)
+            os.startfile(os.path.join(music_dir,songs[0]))
+
+        elif 'the time' in query:
+            time = datetime.datetime.now().strftime("%H:%M:%S")
+            print(time)
+            speak(f"The time is {time}")
+
+        elif 'vs code' in query:
+            codePath = "C:\\Users\\Karan Rao\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"
+            os.startfile(codePath)
+        
+        elif 'open cmd' in query:
+            os.system('start cmd')
+
+
+        elif 'email to boss' in query:
+            try:
+                speak("What should I say?")
+                content = takeCommand()
+                to = "senderemail@gmail.com"
+                sendEmail(to,content) 
+                speak("Email has been sent")
+            except exception as e:
+                speak("Sorry User, I am not able to send this email")
+
+
+        elif 'the end' in query:
+            exit()
+
+        
